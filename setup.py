@@ -3,7 +3,7 @@ from os.path import join, dirname
 
 setup(
     name='MOAI',
-    version='2.0.0',
+    version='3.0.0',
     author='Infrae',
     author_email='info@infrae.com',
     url='http://infrae.com/products/moai',
@@ -30,7 +30,8 @@ setup(
         'main=moai.wsgi:app_factory'
      ],
     'moai.content':[
-        'moai_example=moai.example:ExampleContent'
+        'moai_example=moai.content.example:ExampleContent',
+        'edm=moai.content.edm:EdmContent'
      ],
     'moai.database':[
         'sqlite=moai.database:SQLDatabase',
@@ -41,14 +42,16 @@ setup(
         'file=moai.provider.file:FileBasedContentProvider',
         'list=moai.provider.list:ListBasedContentProvider',
         'oai=moai.provider.oai:OAIBasedContentProvider',
-        'fedora=moai.provider.feadora:FedoraBasedContentProvider'
+        'fedora=moai.provider.feadora:FedoraBasedContentProvider',
+        'edm=moai.provider.edm:EdmBasedContentProvider'
      ],
     'moai.format':[
          'oai_dc=moai.metadata.oaidc:OAIDC',
          'mods=moai.metadata.mods:MODS',
          'nl_mods=moai.metadata.mods:NL_MODS',
          'didl=moai.metadata.didl:DIDL',
-         'nl_didl=moai.metadata.dare_didl:DareDIDL'
+         'nl_didl=moai.metadata.dare_didl:DareDIDL',
+         'edm=moai.metadata.edm:EDM'
      ],
     },
     install_requires=[
