@@ -4,7 +4,7 @@ import time
 import datetime
 import pkg_resources
 from pkg_resources import iter_entry_points
-import ConfigParser
+import configparser
 
 from optparse import OptionParser
 
@@ -53,7 +53,7 @@ def update_moai():
                          'Start script from other directory '
                          'or use --config option\n''' % config_path)
         sys.exit(1)
-    configfile = ConfigParser.ConfigParser()
+    configfile = configparser.ConfigParser()
     configfile.read(config_path)
     profiles = []
     config = {}
@@ -121,10 +121,10 @@ def update_moai():
 
     if not options.quiet and not options.verbose:
         progress.write('')
-        print
-        print >> sys.stderr, ('Content provider returned %s '
-                              'new/modified objects' % count)
-        print >> sys.stderr
+        print()
+        print(('Content provider returned %s '
+                              'new/modified objects' % count), file=sys.stderr)
+        print(file=sys.stderr)
     
     total = provider.count()
 
@@ -136,7 +136,7 @@ def update_moai():
         count += 1
         try:
             raw_data = provider.get_content_by_id(content_id)
-        except Exception, err:
+        except Exception as err:
             if options.debug:
                 raise
             log.error('Error retrieving data %s from provider: %s' % (
@@ -148,7 +148,7 @@ def update_moai():
         try:
             content = ContentClass(provider)
             success = content.update(raw_data)
-        except Exception, err:
+        except Exception as err:
             if options.debug:
                 raise
             log.error('Error converting data %s to content: %s' % (
@@ -169,7 +169,7 @@ def update_moai():
                                    content.deleted,
                                    content.sets,
                                    content.metadata)
-        except Exception, err:
+        except Exception as err:
             if options.debug:
                 raise
             log.error('Error inserting %s into database: %s' % (
@@ -186,11 +186,11 @@ def update_moai():
     log.info('Flushing database')
     database.flush()
     duration = get_duration(starttime)
-    print >> sys.stderr, ''
+    print('', file=sys.stderr)
     msg = 'Updating database with %s objects took %s' % (total, duration)
     log.info(msg)
     if not options.verbose and not options.quiet:
-        print >> sys.stderr, msg
+        print(msg, file=sys.stderr)
 
     if error_count:
         msg = '%s error%s occurred during updating' % (
@@ -198,5 +198,5 @@ def update_moai():
             {1: ''}.get(error_count, 's'))
         log.warning(msg)
         if not options.verbose and not options.quiet:
-            print >> sys.stderr, msg
+            print(msg, file=sys.stderr)
 

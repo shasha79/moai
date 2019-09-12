@@ -49,13 +49,13 @@ class FileBasedContentProvider(object):
             from_time = time.mktime(from_date.timetuple())
         result = self._harvest(from_time=from_time)
         self._content.update(result)
-        return result.keys()
+        return list(result.keys())
 
     def count(self):
         return len(self._content)
 
     def get_content_ids(self):
-        for id in self._content.keys():
+        for id in list(self._content.keys()):
             yield id
 
     def get_content_by_id(self, id):

@@ -43,13 +43,13 @@ def check_type(object,
             object.__class__.__name__,
             suffix)).strip())
     if unicode_keys and object_type is dict:
-        check_type(object.keys(),
+        check_type(list(object.keys()),
                    list,
                    unicode_values=True,
                    prefix=prefix,
                    suffix=suffix)
     if unicode_values and object_type is dict:
-        check_type(object.values(),
+        check_type(list(object.values()),
                    list,
                    unicode_keys=unicode_keys,
                    unicode_values=True,
@@ -94,15 +94,15 @@ class XPath(object):
         for stuff in self.doc.xpath(xpath, namespaces=self.nsmap):
             if isinstance(stuff, str):
                 result.append(stuff.strip().decode('utf8'))
-            elif isinstance(stuff, unicode):
+            elif isinstance(stuff, str):
                 # convert to real unicode object, not lxml proxy
-                result.append(unicode(stuff.strip()))
+                result.append(str(stuff.strip()))
             elif hasattr(stuff, 'text'):
                 if isinstance(stuff.text, str):
                     result.append(stuff.text.strip().decode('utf8'))
-                elif isinstance(stuff.text, unicode):
+                elif isinstance(stuff.text, str):
                     # convert to real unicode object, not lxml proxy
-                    result.append(unicode(stuff.text.strip()))
+                    result.append(str(stuff.text.strip()))
         return result
     
     def number(self, xpath):

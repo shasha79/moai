@@ -40,10 +40,11 @@ class MODS(object):
         DAI = ElementMaker(namespace=self.ns['dai'], nsmap=self.ns)
         GAL = ElementMaker(namespace=self.ns['gal'], nsmap=self.ns)
         mods = MODS.mods(version="3.3")
+
         if data['metadata'].get('identifier'):
             mods.append(MODS.identifier(data['metadata']['identifier'][0],
                                         type="uri"))
-        for key, value in data['metadata'].get('identifier_data', {}).items():
+        for key, value in list(data['metadata'].get('identifier_data', {}).items()):
             mods.append(MODS.identifier(value, type=key))
                 
             
@@ -123,7 +124,7 @@ class MODS(object):
                     surname = surname[0]
                     prefix = contributor.get('prefix')
                     if prefix:
-                        surname = u'%s, %s' % (surname, prefix[0])
+                        surname = '%s, %s' % (surname, prefix[0])
                     name.append(MODS.namePart(surname, type="family"))
                 initials = contributor.get('initials')
                 firstname = contributor.get('firstname')
@@ -162,21 +163,18 @@ class MODS(object):
                 
                 mods.append(MODS.extension(daiList))
 
-        for corp in data['metadata'].get('corporate_data', []):
-            roles = MODS.role()
-            if corp.get('role'):
-                roles.append(MODS.roleTerm(corp['role'],
-                                           authority="marcrelator",
-                                           type="text"))
-            if corp.get('role_code'):
-                roles.append(MODS.roleTerm(corp['role_code'],
-                                           authority="marcrelator",
-                                           type="code"))
+
+        dgg = data['metadata'].get('degree_grantor')
+        if dgg:
             mods.append(MODS.name(
-                MODS.namePart(corp['name']),
-                roles,
+                MODS.namePart(dgg[0]),
+                MODS.role(
+                  MODS.roleTerm('dgg',
+                                authority="marcrelator",
+                                type="code")
+                ),
                 type="corporate"))
-            
+
         if data['metadata'].get('language'):
             lang_el = MODS.language(
                 MODS.languageTerm(data['metadata']['language'][0],
@@ -199,12 +197,7 @@ class MODS(object):
             issn = data['metadata'].get('%s_issn' % host)
             if issn:
                 relitem.append(
-                    MODS.identifier(issn[0],
-                                    type="issn"))
-            host_uri = data['metadata'].get('%s_uri' % host)
-            if host_uri:
-                relitem.append(
-                    MODS.identifier(host_uri[0],
+                    MODS.identifier('urn:issn:%s' % issn[0],
                                     type="uri"))
             volume = data['metadata'].get('%s_volume' % host)
             issue = data['metadata'].get('%s_issue' % host)
@@ -298,7 +291,7 @@ class MODS(object):
                 record_info_el.append(MODS.recordContentSource(info['source']))
             if info.get('identifier'):
                 record_info_el.append(MODS.recordIdentifier(info['identifier']))
-            for key, value in info.get('identifier_data', {}).items():
+            for key, value in list(info.get('identifier_data', {}).items()):
                 record_info_el.append(MODS.recordIdentifier(value, source=key))
             if info.get('origin'):
                 record_info_el.append(MODS.recordOrigin(info['origin']))
