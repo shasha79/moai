@@ -66,7 +66,7 @@ setup(
     'xmltodict'
     ],
     dependency_links=[
-        'https://github.com/shasha79/pastescript'
+        'git+https://github.com/shasha79/pastescript'
     ],
     test_suite='moai.test.suite'
 )
