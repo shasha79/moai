@@ -1,8 +1,6 @@
 
-from lxml.builder import ElementMaker
 from lxml import etree
 import xmltodict
-from xmljson import badgerfish
 
 XSI_NS = 'http://www.w3.org/2001/XMLSchema-instance'
   
