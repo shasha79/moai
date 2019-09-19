@@ -34,6 +34,7 @@ class EdmBasedContentProvider(FileBasedContentProvider):
                     # TODO: take key from record/header/identifier instead of rdf:about
                     self._content[cho["metadata"]["rdf:RDF"]["edm:ProvidedCHO"]["@rdf:about"]] = cho["metadata"]
                     if self._set:
+                        if not cho["header"]: cho["header"] = dict()
                         cho["header"]["setSpec"] = self._set
                     yield cho
 
