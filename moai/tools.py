@@ -36,7 +36,10 @@ def update_moai():
     parser.add_option("", "--date", dest="from_date",
                       help="Only update database from a specific date",
                       action="store")
-        
+    parser.add_option("", "--set", dest="set",
+                      help="Override dataset of the records",
+                      action="store")
+
     options, args = parser.parse_args()
     if not len(args):
         profile_name = 'default'
@@ -105,6 +108,9 @@ def update_moai():
     if provider is None:
         sys.stderr.write('Unknown provider: %s\n' % (provider_name,))
         sys.exit(1)
+
+    if options.set:
+        provider.set_set(options.set)
 
     log = get_moai_log()
     provider.set_logger(log)

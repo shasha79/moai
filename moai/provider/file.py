@@ -18,10 +18,14 @@ class FileBasedContentProvider(object):
             self._path = path
         self._filter = content_filter
         self._content = {}
+        self._set = None
 
     def set_logger(self, log):
         self._log = log
-        
+
+    def set_set(self, set):
+        self._set = set
+
     def _harvest(self, from_time=None):
         result = {}
         for p, d, f in os.walk(self._path):

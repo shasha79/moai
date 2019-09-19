@@ -33,38 +33,9 @@ class EdmBasedContentProvider(FileBasedContentProvider):
                 for cho in root["OAI-PMH"]["ListRecords"]["record"]:
                     # TODO: take key from record/header/identifier instead of rdf:about
                     self._content[cho["metadata"]["rdf:RDF"]["edm:ProvidedCHO"]["@rdf:about"]] = cho["metadata"]
+                    if self._set:
+                        cho["header"]["setSpec"] = self._set
                     yield cho
-                # context = etree.iterparse(ef, events=('end',),
-                #                           tag='{http://www.europeana.eu/schemas/edm/}ProvidedCHO')
-                # try:
-                #     i = 0
-                #     for cho in self._iterate(context):  # If found any invalid part in xml, stop the process
-                #         if not i % 5:
-                #             self._log.warning("Parsed {} objects".format(i))
-                #             self._log.info("Sample object: {}".format(cho))
-                #         i += 1
-                #         yield cho
-                # except etree.XMLSyntaxError:  # check if file is well formed
-                #     self._log.info('Skipping invalid XML {}'.format(edm_file))
-
-    # def _iterate(self, context):
-    #     # Extract from --> http:/text/www.ibm.com/developerworks/xml/library/x-hiperfparse/
-    #     print(context)
-    #     for event, elem in context:
-    #         print(event)
-    #         for cho in self._parse_cho(elem):
-    #             yield cho
-    #         elem.clear()
-    #         while elem.getprevious() is not None:
-    #             del elem.getparent()[0]
-    #     del context
-    #
-    # def _parse_cho(self, element):
-    #     cho_dict = {}
-    #     print(element)
-    #     cho_dict['id'] = element.attrib.get('{http://www.w3.org/1999/02/22-rdf-syntax-ns#}about')
-    #     cho_dict['metadata'] = xmltodict.parse(element, process_namespaces=True)
-    #     return cho_dict
 
     def _get_id(self, header):
         return header.identifier()
