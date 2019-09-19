@@ -26,6 +26,9 @@ class FileBasedContentProvider(object):
     def set_set(self, set):
         self._set = set
 
+    def get_set(self):
+        return self._set
+
     def _harvest(self, from_time=None):
         result = {}
         for p, d, f in os.walk(self._path):

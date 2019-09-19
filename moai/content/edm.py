@@ -18,5 +18,7 @@ class EdmContent(object):
         self.modified= datetime.datetime.now() # TODO: read from header of EDM record
         self.deleted = False  # TODO: support deletions
         self.metadata = edm
-        self.sets = {"edm": {"name": b"EDM Sample",
-                             "desciption": b"EDM Sample"}}
+
+        set = self.provider.get_set()
+        self.sets = {set: {"name": bytes(set, 'utf-8'),
+                             "desciption": b"EDM Feed"}}
