@@ -15,7 +15,7 @@ class EdmContent(object):
 
     def update(self, edm):
         self.id = edm["rdf:RDF"]["edm:ProvidedCHO"]["@rdf:about"]
-        self.modified= datetime.datetime.now()-datetime.timedelta(days=365) # TODO: read from header of EDM record
+        self.modified= datetime.datetime.now()-datetime.timedelta(days=365)  # TODO: read from header of EDM record
         self.deleted = False  # TODO: support deletions
         self.metadata = edm
 
