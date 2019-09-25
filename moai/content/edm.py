@@ -17,7 +17,7 @@ class EdmContent(object):
         self.id = edm["header"]["identifier"]
         self.modified= dateparser.parse(edm["header"]["datestamp"])
         self.deleted = False  # TODO: support deletions
-        self.metadata = edm["metadata"]
+        self.metadata = edm.get("metadata")
 
         set = self.provider.get_set()
         self.sets = {set: {"name": bytes(set, 'utf-8'),
