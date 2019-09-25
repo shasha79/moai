@@ -1,4 +1,4 @@
-
+import dateparser
 from lxml import etree
 
 from moai.utils import XPath
@@ -14,10 +14,10 @@ class EdmContent(object):
         self.metadata = None
 
     def update(self, edm):
-        self.id = edm["rdf:RDF"]["edm:ProvidedCHO"]["@rdf:about"]
-        self.modified= datetime.datetime.now()-datetime.timedelta(days=365)  # TODO: read from header of EDM record
+        self.id = edm["header"]["identifier"]
+        self.modified= dateparser.parse(edm["header"]["datestamp"])
         self.deleted = False  # TODO: support deletions
-        self.metadata = edm
+        self.metadata = edm["metadata"]
 
         set = self.provider.get_set()
         self.sets = {set: {"name": bytes(set, 'utf-8'),

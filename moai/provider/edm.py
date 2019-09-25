@@ -31,7 +31,7 @@ class EdmBasedContentProvider(FileBasedContentProvider):
                 print(ef)
                 root = xmltodict.parse(ef.read(), process_namespaces=False)
                 for cho in root["OAI-PMH"]["ListRecords"]["record"]:
-                    self._content[cho['header']['identifier']] = cho["metadata"]
+                    self._content[cho["header"]["identifier"]] = cho
                     if self._set:
                         if not cho["header"]: cho["header"] = dict()
                         cho["header"]["setSpec"] = self._set
