@@ -39,8 +39,8 @@ class EDM(object):
         return self.schemas[self.prefix]
     
     def __call__(self, element, metadata):
-
         data = metadata.record
+        if not data['metadata']: return
         for prefix, ns in self.ns.items():
             data['metadata']['rdf:RDF']['@xmlns:{}'.format(prefix)] = ns
 
