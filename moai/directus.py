@@ -35,20 +35,14 @@ class Directus():
             set['records'] = []  # [{'record_id': record} for record in inserted_records]
             inserted_sets.append(set)
 
-        self._refresh_token()
-        r = self.session.get(f'{self.api_url}/items/sets?filter[id][in]={",".join([set["id"] for set in inserted_sets])}&fields=records.record_id')
-        print(r.json()['data'])
+        # TODO implement deletion of existing records, sets and their mappings
+        # self._refresh_token()
+        # r = self.session.get(f'{self.api_url}/items/sets?filter[id][in]={",".join([set["id"] for set in inserted_sets])}&fields=records.record_id')
+        # print(r.json()['data'])
 
-        # r = self.session.delete(
-        #     f'{self.api_url}/items/sets/{",".join([set["id"] for set in inserted_sets])}')
-        # 
-        # self._refresh_token()
-        # r = self.session.delete(
-        #     f'{self.api_url}/items/records/{",".join([record["id"] for record in inserted_records])}')
-        # 
-        # self._refresh_token()
-        # r = self.session.post(f'{self.api_url}/items/sets', json=inserted_sets)
-        # r.raise_for_status()
+        self._refresh_token()
+        r = self.session.post(f'{self.api_url}/items/sets', json=inserted_sets)
+        r.raise_for_status()
 
         self._reset_cache()
 
@@ -100,32 +94,32 @@ class Directus():
             self._cache['setrefs'][oai_id].append(set_id)
 
     def get_record(self, oai_id):
-        pass
+        raise NotImplementedError('Not yet implemented')
 
     def get_set(self, oai_id):
-        pass
+        raise NotImplementedError('Not yet implemented')
 
     def get_setrefs(self, oai_id, include_hidden_sets=False):
-        pass
+        raise NotImplementedError('Not yet implemented')
 
     def record_count(self):
-        pass
+        raise NotImplementedError('Not yet implemented')
 
     def set_count(self):
-        pass
+        raise NotImplementedError('Not yet implemented')
 
     def remove_record(self, oai_id):
-        pass
+        raise NotImplementedError('Not yet implemented')
 
     def remove_set(self, oai_id):
-        pass
+        raise NotImplementedError('Not yet implemented')
 
     def oai_sets(self, offset=0, batch_size=20):
-        pass
+        raise NotImplementedError('Not yet implemented')
 
     def oai_earliest_datestamp(self):
-        pass
+        raise NotImplementedError('Not yet implemented')
 
     def oai_query(self, offset=0, batch_size=20, needed_sets=None, disallowed_sets=None, allowed_sets=None,
                   from_date=None, until_date=None, identifier=None):
-        pass
+        raise NotImplementedError('Not yet implemented')

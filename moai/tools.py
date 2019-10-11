@@ -89,7 +89,7 @@ def update_moai():
     else:
         from_date = None
 
-    if True:
+    if config['database_class'] and config['database_class'] == 'directus':
         database = Directus(config)
     else:
         database = SQLDatabase(config['database'])
