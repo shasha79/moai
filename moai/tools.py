@@ -3,6 +3,7 @@ import os
 import time
 import datetime
 import pkg_resources
+from moai.directus import Directus
 from pkg_resources import iter_entry_points
 import configparser
 
@@ -88,7 +89,10 @@ def update_moai():
     else:
         from_date = None
 
-    database = SQLDatabase(config['database'])
+    if config['database_class'] and config['database_class'] == 'directus':
+        database = Directus(config)
+    else:
+        database = SQLDatabase(config['database'])
 
     ContentClass = None
     for content_point in iter_entry_points(group='moai.content',
