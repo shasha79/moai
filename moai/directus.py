@@ -1,7 +1,9 @@
 import datetime
-import requests
 import json
+
+import requests
 from moai.utils import check_type
+
 
 class Directus():
     def __init__(self, config):
@@ -20,75 +22,33 @@ class Directus():
         self.session.headers.update({'Authorization': f'Bearer {auth_response.json()["data"]["token"]}'})
 
     def flush(self):
-        self._refresh_token()
-        oai_ids = set()
-        records_response = self.session.get(f'{self.api_url}/items/records?fields=id')
-        for row in records_response.json()['data']:
-            oai_ids.add(row[0])
-        sets_response = self.session.get(f'{self.api_url}/items/sets?fields=id')
-        for row in sets_response.json()['data']:
-            oai_ids.add(row[0])
-
-        deleted_records = []
-        deleted_sets = []
-        deleted_setrefs = []
-
         inserted_records = []
+        for record_id, record in list(self._cache['records'].items()):
+            record['id'] = record_id
+            record['modified'] = record['modified'].isoformat()
+            inserted_records.append(record)
+
         inserted_sets = []
-        inserted_setrefs = []
+        for set_id, set in list(self._cache['sets'].items()):
+            set['id'] = set_id
+            set['name'] = set_id
+            set['records'] = []  # [{'record_id': record} for record in inserted_records]
+            inserted_sets.append(set)
 
+        self._refresh_token()
+        r = self.session.get(f'{self.api_url}/items/sets?filter[id][in]={",".join([set["id"] for set in inserted_sets])}&fields=records.record_id')
+        print(r.json()['data'])
 
-        for oai_id, item in list(self._cache['records'].items()):
-            if oai_id in oai_ids:
-                # record allready exists
-                deleted_records.append(oai_id)
-            item['id'] = oai_id
-            item['modified'] = item['modified'].isoformat()
-            inserted_records.append(item)
-
-        for oai_id, item in list(self._cache['sets'].items()):
-            if oai_id in oai_ids:
-                # set allready exists
-                deleted_sets.append(oai_id)
-            item['id'] = oai_id
-            inserted_sets.append(item)
-
-        for record_id, set_ids in list(self._cache['setrefs'].items()):
-            deleted_setrefs.append(record_id)
-            for set_id in set_ids:
-                inserted_setrefs.append(
-                    {'record_id':record_id, 'set_id': set_id})
-
-        # delete all processed records before inserting
-        if deleted_records:
-            pass
-            # self._records.delete(
-            #     self._records.c.record_id == sql.bindparam('record_id')
-            # ).execute(
-            #     [{'record_id': rid} for rid in deleted_records])
-        if deleted_sets:
-            pass
-            # self._sets.delete(
-            #     self._sets.c.set_id == sql.bindparam('set_id')
-            # ).execute(
-            #     [{'set_id': sid} for sid in deleted_sets])
-        if deleted_setrefs:
-            pass
-            # self._setrefs.delete(
-            #     self._setrefs.c.record_id == sql.bindparam('record_id')
-            # ).execute(
-            #     [{'record_id': rid} for rid in deleted_setrefs])
-
-        # batch inserts
-        if inserted_records:
-            r = self.session.post(f'{self.api_url}/items/records', json=inserted_records)
-            # self._records.insert().execute(inserted_records)
-        if inserted_sets:
-            pass
-            # self._sets.insert().execute(inserted_sets)
-        if inserted_setrefs:
-            pass
-            # self._setrefs.insert().execute(inserted_setrefs)
+        # r = self.session.delete(
+        #     f'{self.api_url}/items/sets/{",".join([set["id"] for set in inserted_sets])}')
+        # 
+        # self._refresh_token()
+        # r = self.session.delete(
+        #     f'{self.api_url}/items/records/{",".join([record["id"] for record in inserted_records])}')
+        # 
+        # self._refresh_token()
+        # r = self.session.post(f'{self.api_url}/items/sets', json=inserted_sets)
+        # r.raise_for_status()
 
         self._reset_cache()
 
@@ -134,11 +94,10 @@ class Directus():
         self._cache['setrefs'][oai_id] = []
         for set_id in sets:
             self._cache['sets'][set_id] = dict(
-                name = sets[set_id]['name'],
-                description = sets[set_id].get('description'),
-                hidden = sets[set_id].get('hidden', False))
+                name=sets[set_id]['name'],
+                description=sets[set_id].get('description'),
+                hidden=sets[set_id].get('hidden', False))
             self._cache['setrefs'][oai_id].append(set_id)
-
 
     def get_record(self, oai_id):
         pass
