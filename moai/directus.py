@@ -19,18 +19,17 @@ class Directus():
 
         self.api_url = match.group(2)
         self.session = requests.Session()
-        self.token = None
         self._refresh_token(config['directus_auth_email'] if config and config['directus_auth_email'] else email,
                             config['directus_auth_pwd'] if config and config['directus_auth_pwd'] else pwd)
 
     def _refresh_token(self, email='', pwd=''):
-        if not self.token:
+        if not self.session.headers.get('Authorization'):
             auth_route = 'authenticate'
             auth_data = {'email': os.getenv('DIRECTUS_AUTH_EMAIL', email),
                          'password': os.getenv('DIRECTUS_AUTH_PWD', pwd)}
         else:
             auth_route = 'refresh'
-            auth_data = {'token': self.token}
+            auth_data = {'token': self.session.headers.get('Authorization').split()[1]}
 
         auth_response = self.session.post(f'{self.api_url}/auth/{auth_route}', data=auth_data)
         if auth_response.status_code != 200:
