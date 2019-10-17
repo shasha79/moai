@@ -20,13 +20,14 @@ class Directus():
         self.api_url = match.group(2)
         self.session = requests.Session()
         self.token = None
-        self._refresh_token(email, pwd)
+        self._refresh_token(config['directus_auth_email'] if config and config['directus_auth_email'] else email,
+                            config['directus_auth_pwd'] if config and config['directus_auth_pwd'] else pwd)
 
     def _refresh_token(self, email='', pwd=''):
         if not self.token:
             auth_route = 'authenticate'
-            auth_data = {'email': os.getenv('API_AUTH_EMAIL', email),
-                         'password': os.getenv('API_AUTH_PWD', pwd)}
+            auth_data = {'email': os.getenv('DIRECTUS_AUTH_EMAIL', email),
+                         'password': os.getenv('DIRECTUS_AUTH_PWD', pwd)}
         else:
             auth_route = 'refresh'
             auth_data = {'token': self.token}
