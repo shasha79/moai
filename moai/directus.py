@@ -12,7 +12,7 @@ DIRECTUS_DATETIME_FORMAT = "%Y-%m-%d %H:%M:%S"
 
 
 class Directus():
-    def __init__(self, dburi):
+    def __init__(self, dburi, config=None, email='', pwd=''):
         directus_api_pattern = 'directus://.*'
         if not re.match(directus_api_pattern, dburi):
             raise Exception(f'{dburi}: Invalid database uri given, should be of pattern {directus_api_pattern}')
@@ -20,13 +20,13 @@ class Directus():
         self.api_url = dburi.replace('directus://', 'http://')
         self.session = requests.Session()
         self.token = None
-        self._refresh_token()
+        self._refresh_token(email, pwd)
 
-    def _refresh_token(self, email=None, pwd=None):
+    def _refresh_token(self, email='', pwd=''):
         if not self.token:
             auth_route = 'authenticate'
-            auth_data = {'email': os.getenv('API_AUTH_EMAIL', 'some@email.com'),
-                         'password': os.getenv('API_AUTH_PWD', 'some_pwd')}
+            auth_data = {'email': os.getenv('API_AUTH_EMAIL', email),
+                         'password': os.getenv('API_AUTH_PWD', pwd)}
         else:
             auth_route = 'refresh'
             auth_data = {'token': self.token}

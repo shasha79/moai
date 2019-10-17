@@ -40,6 +40,9 @@ def update_moai():
     parser.add_option("", "--set", dest="set",
                       help="Override dataset of the records",
                       action="store")
+    parser.add_option("", "--directus", dest="directus",
+                      help="specify credentials for Directus API in form of user@email.some:some_password",
+                      action="store")
 
     options, args = parser.parse_args()
     if not len(args):
@@ -90,7 +93,8 @@ def update_moai():
         from_date = None
 
     if config['database'].startswith('directus://'):
-        database = Directus(config['database'])
+        creds = options.directus.split(':')
+        database = Directus(config['database'], email=creds[0], pwd=creds[1])
     else:
         database = SQLDatabase(config['database'])
 
