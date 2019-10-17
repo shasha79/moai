@@ -4,20 +4,20 @@ import os
 import re
 
 import requests
+from moai.utils import check_type
 from requests import HTTPError
 
-from moai.utils import check_type
-
 DIRECTUS_DATETIME_FORMAT = "%Y-%m-%d %H:%M:%S"
+DIRECTUS_API_PATTERN = '(directus://)(.*)'
 
 
 class Directus():
     def __init__(self, dburi, config=None, email='', pwd=''):
-        directus_api_pattern = 'directus://.*'
-        if not re.match(directus_api_pattern, dburi):
-            raise Exception(f'{dburi}: Invalid database uri given, should be of pattern {directus_api_pattern}')
+        match = re.match(DIRECTUS_API_PATTERN, dburi)
+        if not match:
+            raise Exception(f'{dburi}: Invalid Directus API URL given, should be of pattern {DIRECTUS_API_PATTERN}')
 
-        self.api_url = dburi.replace('directus://', 'http://')
+        self.api_url = match.group(2)
         self.session = requests.Session()
         self.token = None
         self._refresh_token(email, pwd)
