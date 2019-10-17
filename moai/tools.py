@@ -3,6 +3,7 @@ import os
 import time
 import datetime
 import pkg_resources
+from moai.directus import Directus
 from pkg_resources import iter_entry_points
 import configparser
 
@@ -38,6 +39,9 @@ def update_moai():
                       action="store")
     parser.add_option("", "--set", dest="set",
                       help="Override dataset of the records",
+                      action="store")
+    parser.add_option("", "--directus", dest="directus",
+                      help="specify credentials for Directus API in form of user@email.some:some_password",
                       action="store")
 
     options, args = parser.parse_args()
@@ -88,7 +92,11 @@ def update_moai():
     else:
         from_date = None
 
-    database = SQLDatabase(config['database'])
+    if config['database'].startswith('directus://'):
+        creds = options.directus.split(':')
+        database = Directus(config['database'], email=creds[0], pwd=creds[1])
+    else:
+        database = SQLDatabase(config['database'])
 
     ContentClass = None
     for content_point in iter_entry_points(group='moai.content',
