@@ -19,6 +19,7 @@ class Directus():
 
         self.api_url = match.group(2)
         self.session = requests.Session()
+        self._reset_cache()
         self._refresh_token(config['directus_auth_email'] if config and config['directus_auth_email'] else email,
                             config['directus_auth_pwd'] if config and config['directus_auth_pwd'] else pwd)
 
@@ -55,12 +56,28 @@ class Directus():
 
         self._refresh_token()
 
-        # Retrieving and deleting all the records of current sets and sets themselves
-        r = self.session.get(f'{self.api_url}/items/datasets?fields=records.record_id&filter[id][in]={sets_id}')
-        r = self.session.delete(
-            f'{self.api_url}/items/records/{[rec["record_id"] for rec in r.json()["data"]["records"]]}')
-        r = self.session.delete(f'{self.api_url}/items/datasets/{sets_id}')
+        # Retrieving all the records mapped to current sets via junction collection setrefs
+        r_body = self.session.get(
+            f'{self.api_url}/items/datasets?fields=records.record_id&filter[id][in]={sets_id}').json()
+        
+        # Removing all the records by their corresponding ids
+        if 'data' in r_body and r_body['data']:
+            recs_ids = []
+            for s in r_body["data"]:
+                for r in s['records']:
+                    recs_ids.append(r['record_id'])
+                    if len(recs_ids) >= 100:
+                        # Because we use string id in form like 'oai:sifrix2:REB01-000000139' we can get 403/414 errors
+                        self.remove_record(",".join(recs_ids), False)
+                        recs_ids.clear()
+            # Removing remainder of records if there's any left
+            if len(recs_ids) > 0:
+                self.remove_record(",".join(recs_ids), False)
+            # Removing sets
+            self.remove_set(sets_id, False)
+
         # TODO Cascade deletion of setrefs for removed records (as for now setrefs collection hidden in Directus)
+        # as for now we rely on DBMS cascade in case of deletion on foreign key for setref table
 
         # Posting everything with one request
         r = self.session.post(f'{self.api_url}/items/datasets', json=inserted_sets)
@@ -176,15 +193,17 @@ class Directus():
 
         return r.json()['meta']['total_count']
 
-    def remove_record(self, oai_id):
+    def remove_record(self, oai_id, raise_for_status=True):
         self._refresh_token()
         r = self.session.delete(f'{self.api_url}/items/records/{oai_id}')
-        r.raise_for_status()
+        if raise_for_status:
+            r.raise_for_status()
 
-    def remove_set(self, oai_id):
+    def remove_set(self, oai_id, raise_for_status=True):
         self._refresh_token()
-        r = self.session.delete(f'{self.api_url}/items/dataset/{oai_id}')
-        r.raise_for_status()
+        r = self.session.delete(f'{self.api_url}/items/datasets/{oai_id}')
+        if raise_for_status:
+            r.raise_for_status()
 
     def oai_sets(self, offset=0, batch_size=20):
         self._refresh_token()
