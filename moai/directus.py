@@ -54,32 +54,24 @@ class Directus():
 
         sets_id = ",".join([s["id"] for s in inserted_sets])
 
-        self._refresh_token()
-
-        # Retrieving all the records mapped to current sets via junction collection setrefs
-        r_body = self.session.get(
-            f'{self.api_url}/items/datasets?fields=records.record_id&filter[id][in]={sets_id}').json()
-        
-        # Removing all the records by their corresponding ids
-        if 'data' in r_body and r_body['data']:
-            recs_ids = []
-            for s in r_body["data"]:
-                for r in s['records']:
-                    recs_ids.append(r['record_id'])
-                    if len(recs_ids) >= 100:
-                        # Because we use string id in form like 'oai:sifrix2:REB01-000000139' we can get 403/414 errors
-                        self.remove_record(",".join(recs_ids), False)
-                        recs_ids.clear()
-            # Removing remainder of records if there's any left
-            if len(recs_ids) > 0:
-                self.remove_record(",".join(recs_ids), False)
-            # Removing sets
-            self.remove_set(sets_id, False)
-
         # TODO Cascade deletion of setrefs for removed records (as for now setrefs collection hidden in Directus)
+        # Removing records
         # as for now we rely on DBMS cascade in case of deletion on foreign key for setref table
+        recs_ids = []
+        for id in [r['id'] for r in inserted_records]:
+            recs_ids.append(id)
+            # since our ids are strings we get into situation with overlimiting url length and get 414 error
+            if len(recs_ids) >= 200:
+                self.remove_record(','.join(recs_ids), False)
+                recs_ids.clear()
+        if len(recs_ids) > 0:
+            self.remove_record(','.join(recs_ids), False)
 
-        # Posting everything with one request
+        # TODO Removing sets?
+        self.remove_set(','.join([s['id'] for s in inserted_sets]), False)
+
+        # Posting everything with single request and data compression
+        self._refresh_token()
         r = self.session.post(f'{self.api_url}/items/datasets', json=inserted_sets)
         r.raise_for_status()
 
