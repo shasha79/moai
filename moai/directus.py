@@ -58,8 +58,8 @@ class Directus():
         # Removing records
         # as for now we rely on DBMS cascade in case of deletion on foreign key for setref table
         recs_ids = []
-        for id in [r['id'] for r in inserted_records]:
-            recs_ids.append(id)
+        for r in inserted_records:
+            recs_ids.append(r['id'])
             # since our ids are strings we get into situation with overlimiting url length and get 414 error
             if len(recs_ids) >= 200:
                 self.remove_record(','.join(recs_ids), False)
