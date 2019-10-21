@@ -31,13 +31,19 @@ class EdmBasedContentProvider(FileBasedContentProvider):
                 print(ef)
                 root = xmltodict.parse(ef.read(), process_namespaces=False)
                 records = root["OAI-PMH"]["ListRecords"]["record"]
-                if type(records) is list:
-                    for cho in records:
-                        self._content[cho["header"]["identifier"]] = cho
-                        if self._set:
-                            if not cho["header"]: cho["header"] = dict()
-                            cho["header"]["setSpec"] = self._set
-                        yield cho
+                if not isinstance(records, (list, tuple)):
+                    records = [records]
+
+                for cho in records:
+                    # TODO Mark existing records to delete
+                    if '@status' in cho['header'] and cho['header']['@status'].lower() == 'deleted':
+                        continue
+
+                    self._content[cho["header"]["identifier"]] = cho
+                    if self._set:
+                        if not cho["header"]: cho["header"] = dict()
+                        cho["header"]["setSpec"] = self._set
+                    yield cho
 
     def _get_id(self, header):
         return header.identifier()
