@@ -211,7 +211,7 @@ class Directus():
         r = self.session.get(f'{self.api_url}/items/records?fields=modified&sort=modified')
         r.raise_for_status()
 
-        return datetime.datetime.fromisoformat(r.json()['data'][0]['modified'])
+        return datetime.datetime.strptime(r.json()['data'][0]['modified'], DIRECTUS_DATETIME_FORMAT)
 
     def oai_query(self, offset=0, batch_size=20, needed_sets=None, disallowed_sets=None, allowed_sets=None,
                   from_date=None, until_date=None, identifier=None):
