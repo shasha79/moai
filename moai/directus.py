@@ -20,10 +20,19 @@ class Directus():
         self.api_url = match.group(2)
         self.session = requests.Session()
         self._reset_cache()
-        self._refresh_token(config['directus_auth_email'] if config and config['directus_auth_email'] else email,
-                            config['directus_auth_pwd'] if config and config['directus_auth_pwd'] else pwd)
+
+        self.staticToken = False
+        if config and 'directus_auth_token' in config:
+            self.staticToken = True
+            self.session.headers.update({'Authorization': f'Bearer {config["directus_auth_token"]}'})
+
+        self._refresh_token(config['directus_auth_email'] if config and 'directus_auth_email' in config else email,
+                            config['directus_auth_pwd'] if config and 'directus_auth_pwd' in config else pwd)
 
     def _refresh_token(self, email='', pwd=''):
+        if self.staticToken:
+            return
+
         if not self.session.headers.get('Authorization'):
             auth_route = 'authenticate'
             auth_data = {'email': os.getenv('DIRECTUS_AUTH_EMAIL', email),
