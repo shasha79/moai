@@ -11,7 +11,7 @@ DIRECTUS_DATETIME_FORMAT = "%Y-%m-%d %H:%M:%S"
 DIRECTUS_API_PATTERN = '(directus://)(.*)'
 
 
-class Directus():
+class Directus:
     def __init__(self, dburi, config=None, email='', pwd=''):
         match = re.match(DIRECTUS_API_PATTERN, dburi)
         if not match:
@@ -237,18 +237,18 @@ class Directus():
             until_date = datetime.datetime.utcnow()
 
         url = f'{self.api_url}/items/records?fields=id,deleted,modified,metadata,datasets.dataset_id'
-        filter_clause = f'&filter[modified][lte]={until_date.strftime(DIRECTUS_DATETIME_FORMAT)}'
-        filter_clause += f'&filter[record_id]={identifier}' if identifier is not None else ''
+        filter_clause = f'&filter[id]={identifier}' if identifier is not None else ''
+        filter_clause += f'&filter[modified][lte]={until_date.strftime(DIRECTUS_DATETIME_FORMAT)}'
         filter_clause += f'&filter[modified][gte]={from_date.strftime(DIRECTUS_DATETIME_FORMAT)}' if from_date is not None else ''
 
         if needed_sets:
-            filter_clause += f'&datasets.datasets_id[in]={",".join(needed_sets)}'
+            filter_clause += f'&filter[datasets.dataset_id][in]={",".join(needed_sets)}'
 
         if allowed_sets:
-            filter_clause += f'&datasets.datasets_id[in]={",".join(allowed_sets)}'
+            filter_clause += f'&filter[datasets.dataset_id][in]={",".join(allowed_sets)}'
 
         if disallowed_sets:
-            filter_clause += f'&datasets.datasets_id[nin]={",".join(disallowed_sets)}'
+            filter_clause += f'&filter[datasets.dataset_id][nin]={",".join(disallowed_sets)}'
 
         if offset:
             filter_clause += f'&offset={offset}'
