@@ -71,6 +71,7 @@ class Directus:
             self._is_first_flush = False
             set_exists = False
 
+        self._refresh_token()
         for dset in inserted_sets:
             if set_exists:
                 r = self.session.patch(f'{self.api_url}/items/datasets/{dset["id"]}', json={"records": dset['records']})
