@@ -4,11 +4,13 @@ import os
 import re
 
 import requests
-from moai.utils import check_type
 from requests import HTTPError
+
+from moai.utils import check_type, ProgressBar
 
 DIRECTUS_DATETIME_FORMAT = "%Y-%m-%d %H:%M:%S"
 DIRECTUS_API_PATTERN = '(directus://)(.*)'
+RECORDS_PER_REQUEST = 150
 
 
 class Directus:
@@ -20,6 +22,7 @@ class Directus:
         self.api_url = match.group(2)
         self.session = requests.Session()
         self._reset_cache()
+        self._is_first_flush = True
 
         self.staticToken = False
         if config and 'directus_auth_token' in config:
@@ -61,33 +64,53 @@ class Directus:
             set['records'] = [{'record_id': record} for record in inserted_records]
             inserted_sets.append(set)
 
-        sets_id = ",".join([s["id"] for s in inserted_sets])
+        set_exists = True
+        # removing everything only on the first flush call
+        if self._is_first_flush:
+            self._delete_set_and_records(','.join([s['id'] for s in inserted_sets]))
+            self._is_first_flush = False
+            set_exists = False
 
-        # TODO Cascade deletion of setrefs for removed records (as for now setrefs collection hidden in Directus)
-        # Removing records
-        # as for now we rely on DBMS cascade in case of deletion on foreign key for setref table
-        recs_ids = []
-        for r in inserted_records:
-            recs_ids.append(r['id'])
-            # since our ids are strings we get into situation with overlimiting url length and get 414 error
-            if len(recs_ids) >= 200:
-                self.remove_record(','.join(recs_ids), False)
-                recs_ids.clear()
-        if len(recs_ids) > 0:
-            self.remove_record(','.join(recs_ids), False)
-
-        # TODO Removing sets?
-        self.remove_set(','.join([s['id'] for s in inserted_sets]), False)
-
-        # Posting everything with single request and data compression
-        self._refresh_token()
-        r = self.session.post(f'{self.api_url}/items/datasets', json=inserted_sets)
-        r.raise_for_status()
+        for dset in inserted_sets:
+            if set_exists:
+                r = self.session.patch(f'{self.api_url}/items/datasets/{dset["id"]}', json={"records": dset['records']})
+            else:
+                r = self.session.post(f'{self.api_url}/items/datasets', json=dset)
+                set_exists = r.status_code == 200
+            r.raise_for_status()
 
         self._reset_cache()
 
     def _reset_cache(self):
         self._cache = {'records': {}, 'sets': {}, 'setrefs': {}}
+
+    def _delete_set_and_records(self, sets_ids):
+        # TODO Cascade deletion of setrefs for removed records (as for now setrefs collection hidden in Directus)
+        # Removing records
+        # as for now we rely on DBMS cascade in case of deletion on foreign key for setref table
+
+        progress = ProgressBar()
+        progress.animate('Removing records and datasets if already exists')
+
+        self._refresh_token()
+        r = self.session.get(f'{self.api_url}/items/datasets?filter[id][in]={sets_ids}&fields=records.record_id')
+
+        for d in r.json()['data']:
+            recs_ids = []
+            recs = d['records']
+            for i, r in enumerate(recs):
+                recs_ids.append(r['record_id'])
+                # since our ids are strings we get into situation with overlimiting url length and get 414 error
+                if len(recs_ids) >= RECORDS_PER_REQUEST:
+                    self.remove_record(','.join(recs_ids), False)
+                    recs_ids.clear()
+                    progress.tick(i, len(recs))
+            if len(recs_ids) > 0:
+                self.remove_record(','.join(recs_ids), False)
+                progress.tick(i, len(recs))
+
+        # TODO Removing sets?
+        self.remove_set(sets_ids, False)
 
     def update_record(self, oai_id, modified, deleted, sets, metadata):
         # adds a record, call flush to actually store in db
