@@ -5,6 +5,9 @@ import re
 
 import requests
 from requests import HTTPError
+from requests.adapters import HTTPAdapter
+from urllib3.util import parse_url
+from urllib3.util.retry import Retry
 
 from moai.utils import check_type, ProgressBar
 
@@ -21,6 +24,12 @@ class Directus:
 
         self.api_url = match.group(2)
         self.session = requests.Session()
+        retry = Retry(
+            backoff_factor=0.3,
+            status_forcelist=(500, 503, 413, 429),
+            method_whitelist=('POST', 'PATCH', 'OPTIONS', 'PUT', 'GET', 'TRACE', 'HEAD', 'DELETE')
+        )
+        self.session.mount(f'{parse_url(self.api_url).scheme}://', HTTPAdapter(max_retries=retry))
         self._reset_cache()
         self._is_first_flush = True
 
@@ -77,7 +86,6 @@ class Directus:
                 r = self.session.patch(f'{self.api_url}/items/datasets/{dset["id"]}', json={"records": dset['records']})
             else:
                 r = self.session.post(f'{self.api_url}/items/datasets', json=dset)
-                set_exists = r.status_code == 200
             r.raise_for_status()
 
         self._reset_cache()
