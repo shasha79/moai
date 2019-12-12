@@ -1,3 +1,4 @@
+import json
 import sys
 import os
 import time
@@ -41,7 +42,7 @@ def update_moai():
                       help="Override dataset of the records",
                       action="store")
     parser.add_option("", "--directus", dest="directus",
-                      help="specify credentials for Directus API in form of user@email.some:some_password",
+                      help="specify credentials for Directus API in form of dict.__repr__()",
                       action="store")
 
     options, args = parser.parse_args()
@@ -93,8 +94,11 @@ def update_moai():
         from_date = None
 
     if config['database'].startswith('directus://'):
-        creds = options.directus.split(':')
-        database = Directus(config['database'], email=creds[0], pwd=creds[1])
+        conf: dict = json.loads(options.directus)
+        database = Directus(config,
+                            email=conf.get('auth_email', ''),
+                            pwd=conf.get('auth_pwd', ''),
+                            user_id=conf.get('user_id', None))
     else:
         database = SQLDatabase(config['database'])
 
