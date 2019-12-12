@@ -1,5 +1,6 @@
 import datetime
 import json
+import logging
 import os
 import re
 
@@ -14,6 +15,9 @@ from moai.utils import check_type, ProgressBar
 DIRECTUS_DATETIME_FORMAT = "%Y-%m-%d %H:%M:%S"
 DIRECTUS_API_PATTERN = '(directus://)(.*)'
 RECORDS_PER_REQUEST = 150
+
+logging.basicConfig(format='%(asctime)s:%(name)s:%(levelname)s:%(message)s', level=logging.INFO)
+log = logging.getLogger(__name__)
 
 
 class Directus:
@@ -87,6 +91,7 @@ class Directus:
             else:
                 r = self.session.post(f'{self.api_url}/items/datasets', json=dset)
             r.raise_for_status()
+            log.info(f'Flush took {r.elapsed}')
 
         self._reset_cache()
 
