@@ -30,7 +30,13 @@ class EdmBasedContentProvider(FileBasedContentProvider):
             with open(os.path.join(self._path, edm_file), 'rb') as ef:
                 print(ef)
                 root = xmltodict.parse(ef.read(), process_namespaces=False)
-                records = root["OAI-PMH"]["ListRecords"]["record"]
+                
+                try:
+                    records = root["OAI-PMH"]["ListRecords"]["record"]
+                # Ignore empty ListRecords.
+                except TypeError:
+                    continue
+                    
                 if not isinstance(records, (list, tuple)):
                     records = [records]
 
