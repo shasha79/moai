@@ -64,7 +64,9 @@ setup(
     'pasteDeploy',
     'pasteScript',
     'sqlalchemy',
-    'xmltodict'
+    'xmltodict',
+    'wsgiserver',
+    'requests'
     ],
     dependency_links=[
         'git+https://github.com/shasha79/pastescript'

@@ -95,7 +95,8 @@ def update_moai():
 
     if config['database'].startswith('directus://'):
         conf: dict = json.loads(options.directus)
-        database = Directus(config,
+        database = Directus(config['database'],
+                            config,
                             email=conf.get('auth_email', ''),
                             pwd=conf.get('auth_pwd', ''),
                             user_id=conf.get('user_id', None))
