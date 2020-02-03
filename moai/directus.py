@@ -354,9 +354,10 @@ class Directus:
         r = self.session.get(
             f'{self.url}/items/datasets?fields=id,name,description&filter[hidden]=0&offset={offset}&limit={batch_size}')
         r.raise_for_status()
-        yield [{'id': set['id'],
-                'name': set['name'],
-                'description': ['description']} for set in r.json()['data']]
+        for set in r.json()['data']:
+            yield {'id': set['id'],
+                   'name': set['name'],
+                   'description': set['description']} 
 
     def oai_earliest_datestamp(self):
         self._refresh_token()
