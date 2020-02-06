@@ -382,6 +382,7 @@ class Directus:
 
         url = f'{self.url}/items/records?fields=id,deleted,modified,metadata,datasets.dataset_id'
         filter_clause = f'&filter[id]={identifier}' if identifier is not None else ''
+        filter_clause += f'&limit={batch_size}'
         filter_clause += f'&filter[modified][lte]={until_date.strftime(DIRECTUS_DATETIME_FORMAT)}'
         filter_clause += f'&filter[modified][gte]={from_date.strftime(DIRECTUS_DATETIME_FORMAT)}' if from_date is not None else ''
 
