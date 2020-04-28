@@ -18,7 +18,8 @@ DIRECTUS_DATETIME_FORMAT = "%Y-%m-%d %H:%M:%S"
 DIRECTUS_API_PATTERN = '(directus://)((https?://)?(.*))'
 RECORDS_PER_REQUEST = 150
 
-logging.basicConfig(format='%(asctime)s:%(name)s:%(levelname)s:%(message)s', level=logging.INFO)
+logging.basicConfig(
+    format='%(asctime)s:%(name)s:%(levelname)s:%(message)s', level=logging.INFO)
 log = logging.getLogger(__name__)
 
 
@@ -26,7 +27,8 @@ class Directus:
     def __init__(self, dburi, config, email='', pwd='', user_id=None):
         match = re.match(DIRECTUS_API_PATTERN, dburi)
         if not match:
-            raise Exception(f'{dburi}: Invalid Directus API URL given, should be of pattern {DIRECTUS_API_PATTERN}')
+            raise Exception(
+                f'{dburi}: Invalid Directus API URL given, should be of pattern {DIRECTUS_API_PATTERN}')
 
         self._reset_cache()
 
@@ -44,15 +46,18 @@ class Directus:
             retry = Retry(
                 backoff_factor=0.3,
                 status_forcelist=(500, 503, 413, 429),
-                method_whitelist=('POST', 'PATCH', 'OPTIONS', 'PUT', 'GET', 'TRACE', 'HEAD', 'DELETE')
+                method_whitelist=('POST', 'PATCH', 'OPTIONS',
+                                  'PUT', 'GET', 'TRACE', 'HEAD', 'DELETE')
             )
-            self.session.mount(f'{parse_url(self.url).scheme}://', HTTPAdapter(max_retries=retry))
+            self.session.mount(
+                f'{parse_url(self.url).scheme}://', HTTPAdapter(max_retries=retry))
             self._is_first_flush = True
 
             self.staticToken = False
             if config and 'directus_auth_token' in config:
                 self.staticToken = True
-                self.session.headers.update({'Authorization': f'Bearer {config["directus_auth_token"]}'})
+                self.session.headers.update(
+                    {'Authorization': f'Bearer {config["directus_auth_token"]}'})
 
             self._refresh_token(config['directus_auth_email'] if config and 'directus_auth_email' in config else email,
                                 config['directus_auth_pwd'] if config and 'directus_auth_pwd' in config else pwd)
@@ -66,7 +71,8 @@ class Directus:
                   sql.Column('created_by', sql.INT),
                   sql.Column('modified', sql.DateTime),
                   sql.Column('deleted', sql.Boolean),
-                  sql.Column('metadata', sql.Text))
+                  sql.Column('metadata', sql.Text),
+                  sql.Column('dataset_id', sql.Unicode))
 
         sql.Table('datasets', db,
                   sql.Column('id', sql.Unicode),
@@ -77,7 +83,8 @@ class Directus:
 
         sql.Table('datasetrefs', db,
                   sql.Column('created_by', sql.INT),
-                  sql.Column('record_id', sql.Unicode, sql.ForeignKey('records.id')),
+                  sql.Column('record_id', sql.Unicode,
+                             sql.ForeignKey('records.id')),
                   sql.Column('dataset_id', sql.Unicode, sql.ForeignKey('datasets.id')))
 
         return db
@@ -95,13 +102,17 @@ class Directus:
                          'password': os.getenv('DIRECTUS_AUTH_PWD', pwd)}
         else:
             auth_route = 'refresh'
-            auth_data = {'token': self.session.headers.get('Authorization').split()[1]}
+            auth_data = {'token': self.session.headers.get(
+                'Authorization').split()[1]}
 
-        auth_response = self.session.post(f'{self.url}/auth/{auth_route}', data=auth_data)
+        auth_response = self.session.post(
+            f'{self.url}/auth/{auth_route}', data=auth_data)
         if auth_response.status_code != 200:
-            raise HTTPError(auth_response.json()['error']['message'], auth_response)
+            raise HTTPError(auth_response.json()[
+                            'error']['message'], auth_response)
 
-        self.session.headers.update({'Authorization': f'Bearer {auth_response.json()["data"]["token"]}'})
+        self.session.headers.update(
+            {'Authorization': f'Bearer {auth_response.json()["data"]["token"]}'})
 
     def flush(self):
         if self.direct_db:
@@ -132,6 +143,8 @@ class Directus:
                 deleted_records.append(oai_id)
             item['id'] = oai_id
             item['created_by'] = self.user_id
+            # Assuming a single set and performanve issues with M2M in Directus
+            item['dataset_id'] = list(self._cache['sets'].items())[0][0]
             inserted_records.append(item)
 
         for oai_id, item in list(self._cache['sets'].items()):
@@ -179,26 +192,31 @@ class Directus:
         for record_id, record in list(self._cache['records'].items()):
             record['id'] = record_id
             record['modified'] = record['modified'].isoformat()
+            # Assuming a single set and performanve issues with M2M in Directus
+            record['dataset_id'] = list(self._cache['sets'].items())[0][0]
             inserted_records.append(record)
 
         inserted_sets = []
         for set_id, set in list(self._cache['sets'].items()):
             set['id'] = set_id
             set['name'] = set_id
-            set['records'] = [{'record_id': record} for record in inserted_records]
+            set['records'] = [{'record_id': record}
+                              for record in inserted_records]
             inserted_sets.append(set)
 
         set_exists = True
         # removing everything only on the first flush call
         if self._is_first_flush:
-            self._delete_set_and_records(','.join([s['id'] for s in inserted_sets]))
+            self._delete_set_and_records(
+                ','.join([s['id'] for s in inserted_sets]))
             self._is_first_flush = False
             set_exists = False
 
         self._refresh_token()
         for dset in inserted_sets:
             if set_exists:
-                r = self.session.patch(f'{self.url}/items/datasets/{dset["id"]}', json={"records": dset['records']})
+                r = self.session.patch(
+                    f'{self.url}/items/datasets/{dset["id"]}', json={"records": dset['records']})
             else:
                 r = self.session.post(f'{self.url}/items/datasets', json=dset)
             r.raise_for_status()
@@ -213,7 +231,8 @@ class Directus:
         progress.animate('Removing records and datasets if already exists')
 
         self._refresh_token()
-        r = self.session.get(f'{self.url}/items/datasets?filter[id][in]={sets_ids}&fields=records.record_id')
+        r = self.session.get(
+            f'{self.url}/items/datasets?filter[id][in]={sets_ids}&fields=records.record_id')
 
         for d in r.json()['data']:
             recs_ids = []
@@ -262,7 +281,8 @@ class Directus:
             if hasattr(obj, 'isoformat'):
                 return obj.isoformat()
             else:
-                raise TypeError('Object of type %s with value of %s is not JSON serializable' % (type(obj), repr(obj)))
+                raise TypeError('Object of type %s with value of %s is not JSON serializable' % (
+                    type(obj), repr(obj)))
 
         metadata = json.dumps(metadata, default=date_handler)
         self._cache['records'][oai_id] = (dict(modified=modified,
@@ -309,7 +329,7 @@ class Directus:
     def get_setrefs(self, oai_id, include_hidden_sets=False):
         self._refresh_token()
 
-        url = f'{self.url}/items/records?fields=datasets.dataset_id.id'
+        url = f'{ self.url}/items/records?fields=datasets.dataset_id.id'
 
         filter_clause = f'&filter[id]={oai_id}'
         if not include_hidden_sets:
@@ -325,14 +345,16 @@ class Directus:
 
     def record_count(self):
         self._refresh_token()
-        r = self.session.get(f'{self.url}/items/records?limit=0&meta=total_count')
+        r = self.session.get(
+            f'{self.url}/items/records?limit=0&meta=total_count')
         r.raise_for_status()
 
         return r.json()['meta']['total_count']
 
     def set_count(self):
         self._refresh_token()
-        r = self.session.get(f'{self.url}/items/datasets?limit=0&meta=total_count')
+        r = self.session.get(
+            f'{self.url}/items/datasets?limit=0&meta=total_count')
         r.raise_for_status()
 
         return r.json()['meta']['total_count']
@@ -357,11 +379,12 @@ class Directus:
         for set in r.json()['data']:
             yield {'id': set['id'],
                    'name': set['name'],
-                   'description': set['description']} 
+                   'description': set['description']}
 
     def oai_earliest_datestamp(self):
         self._refresh_token()
-        r = self.session.get(f'{self.url}/items/records?fields=modified&sort=modified')
+        r = self.session.get(
+            f'{self.url}/items/records?fields=modified&sort=modified')
         r.raise_for_status()
 
         return datetime.datetime.strptime(r.json()['data'][0]['modified'], DIRECTUS_DATETIME_FORMAT)
