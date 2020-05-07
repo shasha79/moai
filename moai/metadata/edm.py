@@ -28,6 +28,8 @@ class EDM(object):
                    'skos': 'http://www.w3.org/2004/02/skos/core#',
                    'xsi' : 'http://www.w3.org/2001/XMLSchema-instance',
                    'ore': 'http://www.openarchives.org/ore/terms/',
+                   'svcs': 'http://rdfs.org/sioc/services#',
+                   'doap': 'http://usefulinc.com/ns/doap'
                    }
         self.schemas = {
             'edm': 'http://www.europeana.eu/schemas/edm/EDM-EXTERNAL-MAIN.xsd'}
