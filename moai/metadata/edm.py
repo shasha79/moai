@@ -30,8 +30,6 @@ class EDM(object):
                    'ore': 'http://www.openarchives.org/ore/terms/',
                    'svcs': 'http://rdfs.org/sioc/services#',
                    'doap': 'http://usefulinc.com/ns/doap',
-                   'gndo': 'http://d-nb.info/standards/elementset/gnd#',
-                   'jl': 'http://data.judaicalink.org/ontology/',
                    'rdaGr2': 'http://rdvocab.info/ElementsGr2/'
                    }
         self.schemas = {
