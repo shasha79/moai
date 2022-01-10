@@ -38,7 +38,7 @@ setup(
         'mysql=moai.database:SQLDatabase',
         'postgres=moai.database:SQLDatabase',
         'oracle=moai.database:SQLDatabase',
-        'directus=moai.directus:Directus'],
+        'directus=moai.directus:DirectusProvider'],
     'moai.provider':[
         'file=moai.provider.file:FileBasedContentProvider',
         'list=moai.provider.list:ListBasedContentProvider',
@@ -69,7 +69,8 @@ setup(
     'requests'
     ],
     dependency_links=[
-        'git+https://github.com/shasha79/pastescript'
+        'git+https://github.com/shasha79/pastescript',
+        'git+https://bitbucket.org/jhn-ngo/pyjhn.git'
     ],
     test_suite='moai.test.suite'
 )
