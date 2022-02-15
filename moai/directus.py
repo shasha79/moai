@@ -5,7 +5,7 @@ import re
 from sqlalchemy.engine import make_url
 
 from jhn.directus.client import Directus
-DIRECTUS_DATETIME_FORMAT = "%Y-%m-%d %H:%M:%S"
+DIRECTUS_DATETIME_FORMAT = "%Y-%m-%dT%H:%M:%S"
 DIRECTUS_API_PATTERN = '(directus://)((https?://)?(.*))'
 
 
@@ -15,15 +15,14 @@ log = logging.getLogger(__name__)
 
 
 class DirectusProvider:
-    def __init__(self, dburi, access_token):
+    def __init__(self, dburi, config):
         match = re.match(DIRECTUS_API_PATTERN, dburi)
         if not match:
             raise Exception(
                 f'{dburi}: Invalid Directus API URL given, should be of pattern {DIRECTUS_API_PATTERN}')
 
         self.sql_url = make_url(match.group(3))
-        self.url = match.group(2)
-        self.directus = Directus(self.url, access_token=access_token)
+        self.directus = Directus(config['directus_url'], access_token=config['directus_access_token'])
 
     def get_record(self, oai_id):
         recs = self.directus.get_items("items", item_id=oai_id)
@@ -70,8 +69,8 @@ class DirectusProvider:
                    'description': set['description']}
 
     def oai_earliest_datestamp(self):
-        datasets = self.directus.get_items("datasets", fields='date_modified', sort='date_modified')
-        return datetime.datetime.strptime(datasets[0]['date_modified'], DIRECTUS_DATETIME_FORMAT)
+        datasets = self.directus.get_items("datasets", fields=['date_updated'], sort='date_updated')
+        return datetime.datetime.strptime(datasets[0]['date_updated'], DIRECTUS_DATETIME_FORMAT)
 
     def oai_query(self, offset=0, batch_size=20, needed_sets=[], disallowed_sets=[], allowed_sets=[],
                   from_date=None, until_date=None, identifier=None):
@@ -96,11 +95,13 @@ class DirectusProvider:
 
         #filter_clause += f'&filter[modified][lte]={until_date.strftime(DIRECTUS_DATETIME_FORMAT)}'
 #        filter_clause += f'&filter[modified][gte]={from_date.strftime(DIRECTUS_DATETIME_FORMAT)}' if from_date is not None else ''
-        filter_params['filter[date_modified][_lte]'] = f'{until_date.strftime(DIRECTUS_DATETIME_FORMAT)}'
+        filter_params['filter[date_updated][_lte]'] = f'{until_date.strftime(DIRECTUS_DATETIME_FORMAT)}'
         if from_date:
-            filter_params['filter[date_modified][_gte]'] = f'{from_date.strftime(DIRECTUS_DATETIME_FORMAT)}'
+            filter_params['filter[date_updated][_gte]'] = f'{from_date.strftime(DIRECTUS_DATETIME_FORMAT)}'
 
-        in_sets = allowed_sets + needed_sets
+        in_sets = set()
+        in_sets.union(allowed_sets)
+        in_sets.union(needed_sets)
         if in_sets:
             filter_params['filter[dataset][_in]'] = f'{",".join(in_sets)}'
 
@@ -114,6 +115,6 @@ class DirectusProvider:
         for rec in records:
             yield {'id': rec['id'],
                    'deleted': (rec['status'] == 'archived'),
-                   'modified': datetime.datetime.strptime(rec['date_modified'], DIRECTUS_DATETIME_FORMAT),
-                   'metadata': json.loads(rec['metadata']),
+                   'modified': datetime.datetime.strptime(rec['date_updated'], DIRECTUS_DATETIME_FORMAT),
+                   'metadata': rec['metadata'],
                    'sets': [rec['dataset']]}
