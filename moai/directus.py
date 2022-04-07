@@ -100,14 +100,14 @@ class DirectusProvider:
             filter_params['filter[date_updated][_gte]'] = f'{from_date.strftime(DIRECTUS_DATETIME_FORMAT)}'
 
         in_sets = set()
-        in_sets.union(allowed_sets)
-        in_sets.union(needed_sets)
+        in_sets = in_sets.union(allowed_sets)
+        in_sets = in_sets.union(needed_sets)
         if in_sets:
-            filter_params['filter[dataset][_in]'] = f'{",".join(in_sets)}'
+            filter_params['filter[dataset][id][_in]'] = f'{",".join(in_sets)}'
 
         if disallowed_sets:
             #filter_clause += f'&filter[dataset_id][nin]={",".join(disallowed_sets)}'
-            filter_params['filter[dataset][_nin]'] = f'{",".join(disallowed_sets)}'
+            filter_params['filter[dataset][id][_nin]'] = f'{",".join(disallowed_sets)}'
 
 
         records = self.directus.get_items("items", offset=offset, limit=batch_size, **filter_params)
