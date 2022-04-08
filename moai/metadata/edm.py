@@ -29,7 +29,7 @@ class EDM(object):
                    'xsi' : 'http://www.w3.org/2001/XMLSchema-instance',
                    'ore': 'http://www.openarchives.org/ore/terms/',
                    'svcs': 'http://rdfs.org/sioc/services#',
-                   'doap': 'http://usefulinc.com/ns/doap',
+                   'doap': 'http://usefulinc.com/ns/doap#',
                    'rdaGr2': 'http://rdvocab.info/ElementsGr2/'
                    }
         self.schemas = {
