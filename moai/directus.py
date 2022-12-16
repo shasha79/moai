@@ -36,7 +36,7 @@ class DirectusProvider:
         return None
 
     def get_set(self, oai_id):
-        sets = self.directus.get_items("datasets", item_id=oai_id)
+        sets = self.directus.get_items("datasets", item_id=oai_id, fields=["id", "name", "description"])
         if len(sets) > 0:
             return {
                 'id': sets[0]['id'],
@@ -62,7 +62,12 @@ class DirectusProvider:
         return self.directus.delete_item("datasets", oai_id)
 
     def oai_sets(self, offset=0, batch_size=20):
-        datasets = self.directus.get_items("datasets", offset=offset, limit=batch_size)
+        datasets = self.directus.get_items("datasets",
+                                           offset=offset,
+                                           limit=batch_size,
+                                           fields=["id", "name", "description"],
+                                           filter={"status": "published"},
+                                          )
         for set in datasets:
             yield {'id': set['id'],
                    'name': set['name'],
@@ -110,7 +115,12 @@ class DirectusProvider:
             filter_params['filter[dataset][id][_nin]'] = f'{",".join(disallowed_sets)}'
 
 
-        records = self.directus.get_items("items", offset=offset, limit=batch_size, **filter_params)
+        records = self.directus.get_items("items",
+                                          offset=offset,
+                                          limit=batch_size,
+                                          fields=["id", "status", "date_updated", "metadata", "dataset"],
+                                          **filter_params
+                                         )
 
         for rec in records:
             yield {'id': rec['id'],
