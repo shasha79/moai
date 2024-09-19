@@ -69,6 +69,7 @@ setup(
     'requests'
     ],
     dependency_links=[
+        'git+https://github.com/infrae/pyoai@2.5.1',
         'git+https://github.com/shasha79/pastescript',
         'git+https://bitbucket.org/jhn-ngo/pyjhn.git'
     ],
